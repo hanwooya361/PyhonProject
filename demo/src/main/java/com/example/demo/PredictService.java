@@ -19,14 +19,14 @@ public class PredictService {
 
     @Value("${fastapi.url}")
     private String fastApiUrl;
-
+    // 다른 서버 호출 라이브러리
     WebClient webClient = WebClient.builder().build();
-
+    // sse 구독: react가 접속하면 통로 만들어 리스트에 저장
     public SseEmitter subscribe(){
-        SseEmitter emitter = new SseEmitter();
-        emitters.add(emitter);
+        SseEmitter emitter = new SseEmitter();  // 통로 생성
+        emitters.add(emitter);                  // 리스트 저장
         emitter.onCompletion(() -> emitters.remove(emitter));
-        try {
+        try {   
             emitter.send(SseEmitter.event().name("connect").data("연결 완료"));
         } catch (IOException e) {
             emitters.remove(emitter);
@@ -34,6 +34,7 @@ public class PredictService {
         return emitter;
     }
 
+    // 메세지 전송: 구독중인 모든 클라이언트에게 이벤트 이름,데이터 전송
     public void onMessage(String name, Object data){
         for(SseEmitter emitter : emitters){
             try{
@@ -43,7 +44,8 @@ public class PredictService {
             }
         }
     }
-    
+
+    // 추론 요청: fastapi에 예측 요청
     public void predict(PredictDto dto){
         webClient.post()
             .uri(fastApiUrl+"/api/predict")
